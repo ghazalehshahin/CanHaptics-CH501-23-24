@@ -66,21 +66,39 @@ class Texture{
     
     //Setting name for the circle
     elCircle.setName(name);
-    
+   
     
     world.add(elCircle);
     return elCircle;
-  }  
+  } 
+  
+  public FLine createLineElement(float xStart, float yStart, float xEnd, float yEnd, float density, boolean hasStaticBody, boolean isStatic, boolean isSensor, String name ){
+    FLine elLine = new FLine(xStart, yStart, xEnd, yEnd);
+    
+    elLine.setDensity(density);
+    
+    elLine.setStatic(isStatic);
+    elLine.setStaticBody(hasStaticBody);
+
+    elLine.setSensor(isSensor);
+    
+    elLine.setName(name);
+    
+    elLine.setFriction(200);
+
+    world.add(elLine);
+    return elLine;
+  }
+
   
   //Function to write in the future based on our need for texture rendering
   //public FBlob createBlobElement(){}
   //public FCompound createCompoundElement(){}
-  //public FLine createLineElement(){}
   //public FPoly createPloyElement(){}
   
   
   public FBox createFauxTexture(float w, float h, float x, float y, float red, float green, float blue, float alpha, float density, float rotation){
-    return this.createBoxElement(w, h, x, y, red, blue, green, alpha, density, rotation, true, false, false, "faux");
+    return this.createBoxElement(w, h, x, y, red, blue, green, alpha, density, rotation, false, true, false, "faux");
   }
   
   public FCircle createStippledTexture(float radius, float x, float y, float red, float green, float blue, float alpha, float density){
@@ -89,6 +107,10 @@ class Texture{
   
   public FBox createGrittyTexture(float w, float h, float x, float y, float red, float green, float blue, float alpha, float density, float rotation){
     return this.createBoxElement(w, h, x, y, red, blue, green, alpha, density, rotation, false, true, true, "gritty");
+  }
+  
+  public FLine createCanvasTexture(float xStart, float yStart, float xEnd, float yEnd, float density){
+    return this.createLineElement(xStart, yStart, xEnd, yEnd, density, false, true, false, "canvas");
   }
   
   //Write functions for creating other functions here
