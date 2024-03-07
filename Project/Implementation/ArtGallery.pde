@@ -24,9 +24,12 @@ import java.awt.image.BufferedImage;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-
 import java.util.Arrays;
 import java.util.Scanner;
+
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 /* end library imports *************************************************************************************************/  
 
@@ -114,8 +117,8 @@ void setup(){
   
   /* Images of art pieces*/
   //PImage            fauxArt                             = loadImage("");
-  //PImage            stippledArt                         = loadImage("/img/monalisa.jpg");
-  //PImage            grittyArt                           = loadImage("");
+  //PImage            stippledArt                         = loadImage("/img/grit.png");
+  //PImage            grittyArt                           = loadImage("img/grittest2.png");
   
   //BufferedImage     fauxArtImage                        = (BufferedImage) fauxArt.getNative();
   //int[][]           fauxArtMatrix                       = getMatrixOfImage (fauxArtImage);
@@ -128,8 +131,8 @@ void setup(){
   
   
   /*Reading matrix files*/
-  int[][] fauxArtMatrix = utility.makeStaticMatrix(45, 45, 1);
-  //int[][] stippledArtMatrix = utility.makeRandomMatrix(45, 45, 3);
+  int[][] fauxArtMatrix = utility.makeStaticMatrix(25, 25, 1);
+  int[][] stippledArtMatrix = utility.makeRandomMatrix(45, 45, 3);
   int[][] canvasMatrix = utility.makeLineMatrix(100,100);
   int[][] grittyArtMatrix = utility.makeRandomMatrix(45, 45, 3);
   
@@ -150,8 +153,8 @@ void setup(){
    *      linux:        haplyBoard = new Board(this, "/dev/ttyUSB0", 0);
    *      mac:          haplyBoard = new Board(this, "/dev/cu.usbmodem1411", 0);
    */
-   
-  haplyBoard          = new Board(this, Serial.list()[1], 0);
+   printArray(Serial.list());
+  haplyBoard          = new Board(this, Serial.list()[2], 0);
   widgetOne           = new Device(widgetOneID, haplyBoard);
   pantograph          = new Pantograph();
   
@@ -173,7 +176,7 @@ void setup(){
   world               = new FWorld();
   
   /* Set faux textures */
-  elements = addTexture(stippledArtMatrix, "s", 3);
+  elements = addTexture(canvasMatrix, "l", 5);
   //k = 1;
   
   //  /* Setup the Virtual Coupling Contact Rendering Technique */
@@ -242,34 +245,19 @@ class SimulationThread implements Runnable{
     torques.set(widgetOne.set_device_torques(fEE.array()));
     widgetOne.device_write_torques();
     
+    int damping; 
+    
     for (int i = 0; i < elements.size(); ++i)
     {
-      if (s.h_avatar.isTouchingBody(elements.get(i)) && elements.get(i).getName().equals("stippled")){
-        s.h_avatar.setSensor(true);
-        s.h_avatar.setDamping(700);
+      if (s.h_avatar.isTouchingBody(elements.get(i))){
+        s.h_avatar.setSensor(true); 
+        s.h_avatar.setDamping(getDampingValue(elements.get(i)));
         break;
-      } else if (s.h_avatar.isTouchingBody(elements.get(i)) && elements.get(i).getName().equals("faux")){
-        s.h_avatar.setSensor(true);
-        s.h_avatar.setDamping(600);
-        break;
-      }
-      else if (s.h_avatar.isTouchingBody(elements.get(i)) && elements.get(i).getName().equals("canvas")){
-        s.h_avatar.setSensor(true);
-        s.h_avatar.setFriction(200);
-        break;
-      }
-      else if (s.h_avatar.isTouchingBody(elements.get(i)) && elements.get(i).getName().equals("gritty")){
-        s.h_avatar.setSensor(true);
-        s.h_avatar.setDamping(500);
-        break;
-      }    
-      else {
-        s.h_avatar.setDamping(4);
-      }   
+      }else {
+        s.h_avatar.setSensor(false);
+      } 
     }
 
-    
-    
     world.step(1.0f/1000.0f);
   
     renderingForce = false;
@@ -309,28 +297,23 @@ List<FBody> addTexture (int [][] elements, String type, int padding){
         
         if (type == "s"){
           if(elements[i][j] == 2){
-          //println("x, y, in case 2: " + x + " " + y);
           element = texture.createStippledTexture(0.3 ,x, y, 10, 10, 10, 255, 800);
           elementsList.add(element);
           }
           else if(elements[i][j] == 1){
-            //println("x, y, in case 1: " + x + " " + y);
             element = texture.createStippledTexture(0.1 ,x, y, 10, 10, 10, 255, 800);
             elementsList.add(element); 
           }
           else if(elements[i][j] == 0){
-             //println("x, y, in case 0: " + x + " " + y);
             element = texture.createStippledTexture(0, x, y, 255, 255 ,255, 0, 0);
             elementsList.add(element);             
           }
         } else if (type == "f"){
             if(elements[i][j] == 1){
-            //println("x, y, in case 1: " + x + " " + y);
             element = texture.createFauxTexture(1.0, 1.0 ,x, y, 10, 10, 10, 255, 200, 0);
             elementsList.add(element); 
           }
           else if(elements[i][j] == 0){
-             //println("x, y, in case 0: " + x + " " + y);
             element = texture.createFauxTexture(0, 0, x, y, 255, 255 ,255, 0, 0, 0);
             elementsList.add(element);             
           }     
@@ -345,17 +328,17 @@ List<FBody> addTexture (int [][] elements, String type, int padding){
             }
           }
         } else if(type == "g"){
-          println(elements[i][j]);
-          if(elements[i][j] == 2){
+          //println(elements[i][j]);
+          if(elements[i][j] == 1){
             //println("x, y, in case 1: " + x + " " + y);
-            element = texture.createGrittyTexture(0.1, 0.3 ,x, y, 10, 10, 10, 255, 200, 0);
+            element = texture.createGrittyTexture(0.1, 0.1 ,x, y, 10, 10, 10, 255, 200, 0);
             elementsList.add(element); 
           }
-          else if(elements[i][j] == 1){
-             //println("x, y, in case 0: " + x + " " + y);
-            element = texture.createGrittyTexture(0.4, 0.1, x, y, 10, 10 ,10, 255, 0, 0);
-            elementsList.add(element);             
-          } 
+          //else if(elements[i][j] == 1){
+          //   //println("x, y, in case 0: " + x + " " + y);
+          //  element = texture.createGrittyTexture(0.4, 0.1, x, y, 10, 10 ,10, 255, 0, 0);
+          //  elementsList.add(element);             
+          //} 
         }
        }
   }
@@ -434,26 +417,45 @@ List<FBody> addTexture (int [][] elements, String type, int padding){
 
 int[][] getMatrixOfImage(BufferedImage bufferedImage) {
     int width = bufferedImage.getWidth(null);
-    System.out.println(width);
+    //System.out.println(width);
     int height = bufferedImage.getHeight(null);
-    System.out.println(height);
+    //System.out.println(height);
     int[][] pixels = new int[width][height];
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
+    for (int i = 0; i < width; i++) {
+        for (int j = 0; j < height; j++) {
             int rgb = bufferedImage.getRGB(j, i);
             int blue = rgb & 0xff;
             int green = (rgb & 0xff00) >> 8;
             int red = (rgb & 0xff0000) >> 16;
 
-            if(blue > 45){
-              pixels[j][i] = 1;
+            if(blue < 20){
+              pixels[i][j] = 0;
             }else{
-              pixels[j][i] = 0;
+              pixels[i][j] = 1;
             }
         }
     }
     
     return pixels;
+}
+
+int getDampingValue(FBody element){
+    Dictionary<String, Integer> dampingDict= new Hashtable<>();
+    dampingDict.put("faux", 600);
+    dampingDict.put("stippled", 700);
+    dampingDict.put("gritty", 500);
+    dampingDict.put("canvas", 200);
+    if(element.getName().equals("faux")){
+      return dampingDict.get("faux");
+    } else if(element.getName().equals("stippled")){
+      return dampingDict.get("stippled");
+    } else if(element.getName().equals("gritty")){
+      return dampingDict.get("gritty");
+    } else if(element.getName().equals("canvas")){
+      return dampingDict.get("canvas");
+    } else{
+      return 4;
+    }
 }
 
 
